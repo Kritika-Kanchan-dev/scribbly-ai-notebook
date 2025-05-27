@@ -1,0 +1,509 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scribbly Dashboard</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        /* Override sidebar styles to hide it */
+        .sidebar {
+            display: none !important;
+        }
+        
+        /* Adjust main content to use full width */
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding: 20px;
+        }
+        
+        /* Hide search bar */
+        .top-controls input[type="text"] {
+            display: none !important;
+        }
+        
+        /* Style the top controls area with logout button */
+        .top-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        /* Logout button styling */
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* Theme toggle button styling */
+        #toggleTheme {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+        
+        #toggleTheme:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* Dark theme adjustments */
+        body.light-theme .logout-btn,
+        body.light-theme #toggleTheme {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        body.light-theme .logout-btn:hover,
+        body.light-theme #toggleTheme:hover {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Additional styles for the new functionality */
+        .text-input-section {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            width: 70%;
+            margin-left: 15%;
+        }
+        
+        .text-input-section textarea {
+            width: 70%;
+            min-height: 150px;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        .question-input {
+            width: 70%;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .upload-option {
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .file-upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .file-status {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .results-section {
+            width: 70%;
+            padding: 10px 15px;
+            margin: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            min-height: 100px;
+            display: none;
+            margin-left: 15%;
+        }
+        
+        .results-content {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: #333;
+            white-space: pre-wrap;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #fff;
+            font-style: italic;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .button-row button {
+            margin: 5px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .button-row button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .button-row button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Hide profile circle since we have logout button now */
+        .profile-circle {
+            display: none !important;
+        }
+        .important-content{
+            background-color: rgba(0,0,0,0.6);
+            border-radius: 15px;
+            margin: 1rem auto;
+            max-width: 80%;
+            padding: 1rem;
+        }
+        #log{
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+    <script>
+      const firebaseConfig = {
+        apiKey: "Your_API_KEY_HERE",
+        authDomain: "YOUR_AUTOH_DOMAIN_HERE",
+        projectId: "YOUR_PROJECT_ID_HERE",
+        storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+        appId: "Your_APP_ID_HERE",
+        measurementId: "G-QFTP3MMN7Y"
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
+</head>
+<body>
+    <!-- Background Videos -->
+    <video autoplay muted loop id="bgVideoDark" class="bg-video">
+    <source src="{% static 'images/bg.mp4' %}" type="video/mp4">
+    </video>
+    <video autoplay muted loop id="bgVideoLight" class="bg-video hidden">
+    <source src="{% static 'images/bg4.mp4' %}" type="video/mp4">
+    </video>
+
+    <!-- Top Right: Theme Toggle + Logout -->
+    <div class="top-controls">
+        <button onclick="toggleTheme()" id="toggleTheme">Toggle Theme 🌓</button>
+        <button class="logout-btn"><a href="{% url 'logout' %}" id="log">Logout</a></button>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="main-content">
+        <h1>Welcome Back !!</h1>
+    <div class="important-content">
+        <!-- Upload message -->
+        <div class="upload-box">
+            <p>Upload your text and PDFs — we'll automatically generate smart, structured notes tailored to your content.</p>
+        </div>
+            
+
+        <!-- Enhanced Text Input Section -->
+        <div class="text-input-section">
+            <h3>Enter your text:</h3>
+            <textarea id="textInput" placeholder="Paste your text here or upload a file above..."></textarea>
+            <div class="upload-option">
+            <label for="file-upload" class="file-upload-btn">
+                📂 or Upload your PDF
+            </label>
+            <input id="file-upload" name="file" type="file" accept=".pdf,.png,.jpg,.jpeg" style="display: none;" onchange="handleFileUpload(this)" />
+            <div id="fileStatus" class="file-status"></div>
+            </div>
+            
+            <!-- Question input (hidden by default, shown for Q&A) -->
+            <div id="questionSection" style="display: none;">
+                <h4>Ask a question about your text:</h4>
+                <input type="text" id="questionInput" class="question-input" placeholder="What would you like to know?">
+            </div>
+        </div>
+        
+
+        <div class="button-row">
+            <button onclick="processText('summarize')" id="summarizeBtn">Summarise</button>
+            <button onclick="processText('flashcards')" id="flashcardsBtn">Make Flashcards</button>
+            <button onclick="showQuestionInput()" id="qaBtn">Ask Question</button>
+        </div>
+
+    </div>
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <h3 id="resultsTitle">Results</h3>
+            <div class="results-content" id="resultsContent"></div>
+            
+        </div>
+    </div>
+
+    <script src="{% static 'js/dashboard.js' %}"></script>
+
+    <script>
+        // Logout function
+        function logout() {
+            // Firebase logout
+            firebase.auth().signOut()
+                .then(() => {
+                    // Django logout
+                    fetch('{% url "logout" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value || getCookie('csrftoken'),
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(() => {
+                        window.location.href = "/login/";
+                    })
+                    .catch(() => {
+                        // Even if Django logout fails, redirect to login
+                        window.location.href = "/login/";
+                    });
+                })
+                .catch((error) => {
+                    console.error("Logout Error:", error);
+                    // Still redirect even if Firebase logout fails
+                    window.location.href = "/login/";
+                });
+        }
+
+        // Helper function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // File Upload Handler
+        function handleFileUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            // Show file processing status
+            const fileStatus = document.getElementById('fileStatus');
+            fileStatus.style.display = 'block';
+            fileStatus.textContent = '📄 Processing file...';
+            fileStatus.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
+            fileStatus.style.color = '#2196f3';
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+            
+            // Send AJAX request
+            fetch('{% url "upload_file" %}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Put the extracted text in the textarea
+                    document.getElementById('textInput').value = data.extracted_text;
+                    
+                    // Show success status
+                    fileStatus.textContent = `✅ File processed successfully! Text extracted from "${file.name}". Now you can summarize, create flashcards, or ask questions.`;
+                    fileStatus.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+                    fileStatus.style.color = '#4caf50';
+                    
+                } else {
+                    // Show error status
+                    fileStatus.textContent = `❌ Error: ${data.message}`;
+                    fileStatus.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+                    fileStatus.style.color = '#f44336';
+                }
+            })
+            .catch(error => {
+                fileStatus.textContent = '❌ Failed to process file. Please try again.';
+                fileStatus.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+                fileStatus.style.color = '#f44336';
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                // Clear the file input
+                input.value = '';
+            });
+        }
+
+        // AI Processing Functions
+        function processText(taskType) {
+            const textInput = document.getElementById('textInput').value.trim();
+            const questionInput = document.getElementById('questionInput').value.trim();
+            
+            if (!textInput) {
+                alert('Please enter some text or upload a file first.');
+                return;
+            }
+            
+            if (taskType === 'qa' && !questionInput) {
+                alert('Please enter a question.');
+                return;
+            }
+            
+            // Show loading
+            showResults('Loading...', 'Processing your request...', true);
+            
+            // Disable buttons
+            setButtonsDisabled(true);
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('task', taskType);
+            formData.append('text', textInput);
+            if (taskType === 'qa') {
+                formData.append('question', questionInput);
+            }
+            formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+            
+            // Send AJAX request
+            fetch('{% url "dashboard_process" %}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showResults('Error', data.error, false, true);
+                } else {
+                    let title = '';
+                    switch(taskType) {
+                        case 'summarize':
+                            title = 'Summary';
+                            break;
+                        case 'flashcards':
+                            title = 'Flashcards';
+                            break;
+                        case 'qa':
+                            title = 'Answer';
+                            break;
+                    }
+                    showResults(title, data.result, false, false);
+                }
+            })
+            .catch(error => {
+                showResults('Error', 'Something went wrong. Please try again.', false, true);
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                setButtonsDisabled(false);
+            });
+        }
+        
+        function showQuestionInput() {
+            const questionSection = document.getElementById('questionSection');
+            if (questionSection.style.display === 'none') {
+                questionSection.style.display = 'block';
+                document.getElementById('qaBtn').textContent = 'Ask Question';
+                setTimeout(() => {
+                    processText('qa');
+                }, 100);
+            } else {
+                processText('qa');
+            }
+        }
+        
+        function showResults(title, content, isLoading = false, isError = false) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsTitle = document.getElementById('resultsTitle');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            resultsTitle.textContent = title;
+            resultsContent.textContent = content;
+            
+            if (isLoading) {
+                resultsContent.className = 'results-content loading';
+            } else if (isError) {
+                resultsContent.className = 'results-content error';
+            } else {
+                resultsContent.className = 'results-content';
+            }
+            
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function setButtonsDisabled(disabled) {
+            document.getElementById('summarizeBtn').disabled = disabled;
+            document.getElementById('flashcardsBtn').disabled = disabled;
+            document.getElementById('qaBtn').disabled = disabled;
+        }
+
+        // Firebase auth functions
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "/login/";
+            }
+        });
+    </script>
+</body>
+</html>

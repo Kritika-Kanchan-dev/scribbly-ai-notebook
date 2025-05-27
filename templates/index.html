@@ -1,0 +1,355 @@
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scribbly - Your AI Study Buddy</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --text-color: #ffffff;
+      --accent-color: #ab70ac;
+      --button-bg: #ffffff;
+      --button-text: #000000;
+    }
+
+    body.light {
+      --bg-color: #d4f1f4;
+      --text-color: #003d40;
+      --accent-color: #00a7a7;
+      --button-bg: #003d40;
+      --button-text: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--text-color);
+    }
+
+    .brand {
+      font-size: 2.5rem;
+      font-weight: bold;
+    }
+
+    .tagline{
+        font-size: 1rem;
+        color: #E6E6FA;
+        font-family: 'Montserrat', sans-serif;
+    }
+    .tagline-box {
+        margin-top: 10px;
+        margin-bottom: 30px;
+        padding: 10px 20px;
+        display: inline-block;
+        border: 2px solid white;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: white;
+        background-color: transparent;
+    }
+
+    body.light .tagline-box {
+        border-color: black;
+        color: black;
+    }
+    body.light .tagline {
+        border-color: black;
+        color: black;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    #toggleTheme {
+      padding: 8px 16px;
+      background-color: transparent;
+      color: var(--text-color);
+      border: 2px solid var(--text-color);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #toggleTheme:hover {
+      background-color: var(--accent-color);
+      color: #fff;
+    }
+
+    .content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 60px 0;
+      gap: 20px;
+    }
+
+    .left {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .left h1 {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .highlight {
+      color: var(--accent-color);
+    }
+
+    .left p {
+      font-size: 2.2rem;
+      line-height: 2.8rem;
+      margin-bottom: 25px;
+      align-items: center;
+    }
+
+    .cta-btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none; /* 🔹 Add this line */
+        display: inline-block;  /* 🔹 Ensures padding works for <a> */
+    }
+
+    .cta-btn:hover {
+      opacity: 0.9;
+    }
+
+    .right {
+      flex: 1;
+      min-width: 280px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .right .illustration {
+        width: 100%;
+        max-width: 500px;
+        height: 350px;
+        border-radius: 25px;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.25);
+        object-fit: cover;
+        background: none; /* remove gradient background when using media */
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.85rem;
+      padding-top: 20px;
+      border-top: 2px solid var(--text-color);
+    }
+    .scribbly-colored {
+        color: #b877d9;
+        font-weight: bold;
+    }
+
+    body.light .scribbly-colored {
+        color: #00796b; 
+    }
+
+    .typing::after {
+        content: '|';
+        animation: blink 1s infinite;
+        color: inherit; /* Keep existing text color */
+    }
+    #cursor-light {
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.63) 0%, transparent 10%);
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        transition: opacity 0.2s ease;
+        opacity: 0;
+    }
+
+    @keyframes blink {
+        0%, 50%, 100% { opacity: 1; }
+        25%, 75% { opacity: 0; }
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .left h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+      <!-- Add Firebase core SDKs (put before </body>) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <!-- Add more if you want Firebase Storage etc. -->
+  <script>
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "firebase/app";
+    import { getAnalytics } from "firebase/analytics";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "Your_API_KEY_HERE",
+      authDomain: "YOUR_AUTOH_DOMAIN_HERE",
+      projectId: "YOUR_PROJECT_ID_HERE",
+      storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+      appId: "Your_APP_ID_HERE",
+      measurementId: "G-QFTP3MMN7Y"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+        
+      <div class="brand">✨Scribbly<p class="tagline">Your AI Study Buddy</p></div>
+
+      <button id="toggleTheme">Toggle Theme</button>
+    </div>
+
+    <div id="cursor-light"></div>
+
+    <div class="content">
+      <div class="left">
+        <div class="tagline-box">
+            🎯 Scribble &nbsp; 🎗️ Summarize &nbsp; 🎊 Succeed
+        </div>
+        <h1>Hello, I’m <span id="scribbly-text" class="typing scribbly-colored highlight"></span></h1>
+
+        <p>
+          A Place Where <span class="highlight">Artificial Intelligence</span><br />
+          Meets Academic Excellence.
+        </p>
+
+        <a href="{% url 'login' %}" class="cta-btn">LogIn / Signup</a>
+
+      </div>
+      <div class="right">
+        <video class="illustration" autoplay muted loop playsinline>
+            <source src="{% static 'images/video.mp4' %}" type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
+        
+    </div>
+    </div>
+
+    <div class="footer">
+      Scribbly is your AI-powered notebook — built to help you take smart notes, summarize concepts, and learn better every day.
+    </div>
+  </div>
+
+  <script>
+    const toggleBtn = document.getElementById('toggleTheme');
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light');
+    });
+    function typeText(elementId, textArray, delay = 100, eraseDelay = 50, pause = 1500) {
+    const el = document.getElementById(elementId);
+    let index = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
+    function type() {
+    const currentText = textArray[index];
+    if (!isDeleting) {
+        el.textContent = currentText.substring(0, charIndex + 1);
+        charIndex++;
+        if (charIndex === currentText.length) {
+        isDeleting = true;
+        setTimeout(type, pause);
+        } else {
+        setTimeout(type, delay);
+        }
+    } else {
+        el.textContent = currentText.substring(0, charIndex - 1);
+        charIndex--;
+        if (charIndex === 0) {
+        isDeleting = false;
+        index = (index + 1) % textArray.length;
+        setTimeout(type, delay);
+        } else {
+        setTimeout(type, eraseDelay);
+        }
+    }
+    }
+
+        type();
+    }
+
+    // Only animate “Scribbly”
+    window.onload = function () {
+        typeText("scribbly-text", ["Scribbly"]);
+    };
+      const light = document.getElementById("cursor-light");
+
+        document.addEventListener("mousemove", (e) => {
+            light.style.left = e.clientX + "px";
+            light.style.top = e.clientY + "px";
+            light.style.opacity = "1";
+        });
+
+        document.addEventListener("mouseleave", () => {
+            light.style.opacity = "0";
+        });
+    // In both dashboard.html and index.html
+    const themeToggle = document.getElementById('themeToggle');
+    const isDark = localStorage.getItem('theme') === 'dark';
+
+    if (isDark) {
+    document.body.classList.add('dark-theme');
+    document.body.classList.remove('light-theme');
+    themeToggle.checked = true;
+    }
+
+    themeToggle.addEventListener('change', function () {
+    const isDark = document.body.classList.toggle('dark-theme');
+    document.body.classList.toggle('light-theme', !isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+  </script>
+</body>
+</html>

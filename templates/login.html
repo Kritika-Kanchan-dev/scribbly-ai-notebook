@@ -1,0 +1,114 @@
+<!-- templates/login.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login | Scribbly</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <div id="cursor-light"></div>
+  <div class="container">
+    <div class="section">
+      <img src="{% static 'images/login.png' %}" alt="Bot Chat">
+      <div class="form-box">
+        <h2>Welcome again!</h2>
+        <p>Please enter your details</p>
+        <!-- Firebase login form (client-side only) -->
+        <form onsubmit="loginUser(event)">
+          <input type="text" id="login-username" placeholder="Username" required />
+          <input type="email" id="login-email" placeholder="Email" required />
+          <input type="password" id="login-password" placeholder="Password" required />
+          <div class="form-options">
+            <label><input type="checkbox" /> Remember for 30 days</label>
+            <a href="#" onclick="forgotPassword()">Forgot Password?</a>
+          </div>
+          <button type="submit" class="btn-black">Log In</button>
+        </form>
+        <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+
+        <div class="toggle-theme" onclick="toggleTheme()">Toggle Theme</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Initialization -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "Your_API_KEY_HERE",
+      authDomain: "YOUR_AUTOH_DOMAIN_HERE",
+      projectId: "YOUR_PROJECT_ID_HERE",
+      storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+      appId: "Your_APP_ID_HERE",
+      measurementId: "G-QFTP3MMN7Y"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <!-- JS Logic -->
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      if (body.classList.contains('dark-theme')) {
+        body.classList.remove('dark-theme');
+        body.classList.add('light-theme');
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.classList.remove('light-theme');
+        body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    window.onload = function () {
+      const theme = localStorage.getItem('theme') || 'light';
+      document.body.classList.add(`${theme}-theme`);
+    };
+
+    const light = document.getElementById("cursor-light");
+    document.addEventListener("mousemove", (e) => {
+      light.style.left = e.clientX + "px";
+      light.style.top = e.clientY + "px";
+      light.style.opacity = "1";
+    });
+    document.addEventListener("mouseleave", () => {
+      light.style.opacity = "0";
+    });
+
+    function loginUser(event) {
+      event.preventDefault();
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          alert("Login successful!");
+          window.location.href = "/dashboard/";
+        })
+        .catch((error) => {
+          alert("Login failed: " + error.message);
+        });
+    }
+    function forgotPassword() {
+      const email = prompt("Enter your email to reset your password:");
+      if (email) {
+        firebase.auth().sendPasswordResetEmail(email)
+          .then(() => {
+            alert("Password reset link sent to your email.");
+          })
+          .catch(error => {
+            alert("Error: " + error.message);
+          });
+      }
+    }
+  </script>
+</body>
+</html>

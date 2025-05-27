@@ -1,0 +1,139 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  color: white;
+}
+#email-user{
+  color: white;
+}
+.bg-video {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.hidden { display: none; }
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: 85px;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 1rem;
+  overflow-y:auto;
+  overflow-x:unset;
+}
+
+.menu-btn {
+  font-size: 1.5rem;
+  background: transparent;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* Top Controls */
+.top-controls {
+  position: fixed;
+  top: 10px; right: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#searchInput {
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: none;
+  width: 200px;
+}
+
+#toggleTheme {
+  padding: 8px 16px;
+  background-color: transparent;
+  color: var(--text-color);
+  border: 2px solid var(--text-color);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#toggleTheme:hover {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+/* Main Content */
+.main-content {
+  text-align: center;
+  margin-top: 100px;
+}
+
+.upload-box {
+  margin: 1rem auto;
+  max-width: 500px;
+  padding: 1rem;
+  background-color: rgba(0,0,0,0.6);
+  border-radius: 15px;
+}
+
+.button-row button {
+  margin: 1rem;
+  padding: 0.7rem 1.2rem;
+  font-weight: bold;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background-color: #fff;
+  color: #000;
+}
+
+/* Profile Circle */
+.profile-circle {
+  position: fixed;
+  bottom: 20px; left: 20px;
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background-color: #222;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  background-color: #333;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  min-width: 150px;
+}
+.upload-button-container {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000;
+}
+
+.upload-btn {
+  background-color: #8e44ad; /* Purple for dark theme */
+  color: white;
+  font-size: 2rem;
+  padding: 15px 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+.upload-btn:hover {
+  transform: scale(1.1);
+}
